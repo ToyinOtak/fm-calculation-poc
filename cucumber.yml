@@ -1,0 +1,29 @@
+  <%
+  rerun = File.file?('rerun.txt') ? IO.read('rerun.txt') : ""
+    rerun_opts = rerun.to_s.strip.empty? ? "--format #{ENV['CUCUMBER_FORMAT'] || 'progress'} features" : "--format #{ENV['CUCUMBER_FORMAT'] || 'pretty'} #{rerun}"
+    std_opts = "--format #{ENV['CUCUMBER_FORMAT'] || 'pretty'} --strict --tags 'not @wip and not smoke and not @fragile and not @manual and not @visual' -r features"
+    html_report = "--format html --out #{Dir.pwd}/tmp/capybara/report_#{ENV['BS_KEY_NAME']}.html"
+    env_report = "--format html --out #{Dir.pwd}/tmp/capybara/smoke_report.html"
+    rerun_html_report = "--format html --out #{Dir.pwd}/tmp/capybara/rerun_report_#{ENV['BS_KEY_NAME']}.html"
+    `mkdir -p "#{Dir.pwd}"/tmp/capybara` unless File.exists?("#{Dir.pwd}/tmp/capybara")
+    env_profile = "ENV=true -f pretty -r features -r features/step_definitions -r features/support"
+
+    %>
+  default: >
+    <%= std_opts %> features
+    <% html_report %>
+    -r features/step_definitions
+    -e features/smoke_features
+    -e features/support/env.rb
+  visual: >
+    <%= std_opts %> features
+    <%= html_report %>
+  wip: --tags @wip:3 --wip features
+  rerun: <%= rerun_opts %> --format rerun --out rerun.txt --strict
+  env:
+    <%= env_report %>
+    <%= env_profile %>
+  env_browser:
+    DRIVER=chrome
+    <%= env_report %>
+    <%= env_profile %>
